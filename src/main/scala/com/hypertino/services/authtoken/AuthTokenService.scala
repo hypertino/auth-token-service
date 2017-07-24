@@ -48,7 +48,8 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
           .ask(ContentGet(getTokenStoragePath(tokenId)))
           .map { ok ⇒
             val token = ok.body.content
-            if (token.token_key.toString != tokenKey) {
+            if (token.token_key.toString != tokenKey ||
+                token.valid_until.toLong < System.currentTimeMillis) {
               throw Unauthorized(ErrorBody("token-not-found"))
             } else {
               Created(ValidationResult(

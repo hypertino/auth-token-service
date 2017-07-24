@@ -1,0 +1,6 @@
+[submodule "api/auth-token-service-api"]
+	path = api/auth-token-service-api
+	url = git@github.com:hypertino/auth-token-service-api.git
+[submodule "api/hyperstorage-service-api"]
+	path = api/hyperstorage-service-api
+	url = git@github.com:hypertino/hyperstorage-service-api.git

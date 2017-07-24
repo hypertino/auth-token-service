@@ -3,7 +3,7 @@ package com.hypertino.services.authtoken
 import java.util.Base64
 
 import com.hypertino.authtoken.apiref.authtoken.{CreateSessionToken, TokensPost, Validation, ValidationsPost}
-import com.hypertino.authtoken.apiref.hyperstorage.{ContentDelete, ContentGet, ContentPut}
+import com.hypertino.authtoken.apiref.hyperstorage.{ContentDelete, ContentGet, ContentPut, HyperStorageTransaction}
 import com.hypertino.binders.value.{Obj, Text, Value}
 import com.hypertino.hyperbus.Hyperbus
 import com.hypertino.hyperbus.model.{Created, DynamicBody, EmptyBody, ErrorBody, Headers, HeadersMap, MessagingContext, NoContent, NotFound, Ok, ResponseBase, Unauthorized}
@@ -33,10 +33,10 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
 
   def onContentPut(implicit request: ContentPut): Task[ResponseBase] = {
     if (hyperStorageContent.put(request.path, request.body.content).isDefined) {
-      Task.eval(NoContent(EmptyBody))
+      Task.eval(Ok(HyperStorageTransaction("100500")))
     }
     else {
-      Task.eval(Created(EmptyBody))
+      Task.eval(Created(HyperStorageTransaction("100500")))
     }
   }
 
@@ -48,10 +48,8 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
   }
 
   def onContentDelete(implicit request: ContentDelete): Task[ResponseBase] = {
-    hyperStorageContent.get(request.path) match {
-      case Some(v) ⇒ Task.eval(Ok(DynamicBody(v)))
-      case None ⇒ Task.eval(NotFound(ErrorBody("not-found", Some(request.path))))
-    }
+    hyperStorageContent.get(request.path)
+    Task.eval(Ok(HyperStorageTransaction("100500")))
   }
   val service = new AuthTokenService()
 

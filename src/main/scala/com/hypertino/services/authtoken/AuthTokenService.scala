@@ -71,7 +71,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
       val userId = authorizationResult.user_id.toString
       val tokenId = IdGenerator.create()
       val tokenKey = keyGenerator.nextKey()
-      val validUntil = post.body.timeToLiveSeconds.getOrElse(DEFAULT_TOKEN_LIFETIME).toLong +
+      val validUntil = post.body.timeToLiveSeconds.getOrElse(DEFAULT_TOKEN_LIFETIME).toLong * 1000l +
         System.currentTimeMillis()
 
       val token = SessionToken(userId,tokenId,tokenKey,validUntil)

@@ -17,8 +17,9 @@ import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
+import com.hypertino.hyperbus.subscribe.Subscribable
 
-class AuthTokenService(implicit val injector: Injector) extends Service with Injectable {
+class AuthTokenService(implicit val injector: Injector) extends Service with Injectable with Subscribable {
   private implicit val scheduler = inject[Scheduler]
   private val hyperbus = inject[Hyperbus]
   private val log = LoggerFactory.getLogger(getClass)

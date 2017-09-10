@@ -31,3 +31,4 @@ lazy val `auth-service` = project in file(".") enablePlugins Raml2Hyperbus setti
       )
     )
 )
+

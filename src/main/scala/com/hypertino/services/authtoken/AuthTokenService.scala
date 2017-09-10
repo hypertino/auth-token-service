@@ -12,22 +12,21 @@ import com.hypertino.hyperbus.util.IdGenerator
 import com.hypertino.service.control.api.Service
 import monix.eval.Task
 import monix.execution.Scheduler
-import org.slf4j.LoggerFactory
+import com.typesafe.scalalogging.StrictLogging
 import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import com.hypertino.hyperbus.subscribe.Subscribable
 
-class AuthTokenService(implicit val injector: Injector) extends Service with Injectable with Subscribable {
+class AuthTokenService(implicit val injector: Injector) extends Service with Injectable with Subscribable with StrictLogging {
   private implicit val scheduler = inject[Scheduler]
   private val hyperbus = inject[Hyperbus]
-  private val log = LoggerFactory.getLogger(getClass)
   private final val DEFAULT_TOKEN_LIFETIME = 365 * 24 * 60 * 60
   private final val keyGenerator = new KeyGenerator(6)
-  log.info("AuthTokenService started")
+  logger.info(s"${getClass.getName} started")
 
-  private val handlers = hyperbus.subscribe(this, log)
+  private val handlers = hyperbus.subscribe(this, logger)
 
   def onValidationsPost(implicit post: ValidationsPost): Task[ResponseBase] = {
     val authorization = post.body.authorization
@@ -115,6 +114,6 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
 
   override def stopService(controlBreak: Boolean, timeout: FiniteDuration): Future[Unit] = Future {
     handlers.foreach(_.cancel())
-    log.info("AuthTokenService stopped")
+    logger.info(s"${getClass.getName} stopped")
   }
 }

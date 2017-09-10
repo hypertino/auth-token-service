@@ -34,10 +34,10 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
 
   def onContentPut(implicit request: ContentPut): Task[ResponseBase] = {
     if (hyperStorageContent.put(request.path, request.body.content).isDefined) {
-      Task.eval(Ok(HyperStorageTransaction("100500")))
+      Task.eval(Ok(HyperStorageTransaction("100500",request.path, 1l)))
     }
     else {
-      Task.eval(Created(HyperStorageTransaction("100500")))
+      Task.eval(Created(HyperStorageTransaction("100500",request.path, 1l)))
     }
   }
 
@@ -50,7 +50,7 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
 
   def onContentDelete(implicit request: ContentDelete): Task[ResponseBase] = {
     hyperStorageContent.get(request.path)
-    Task.eval(Ok(HyperStorageTransaction("100500")))
+    Task.eval(Ok(HyperStorageTransaction("100500",request.path, 1l)))
   }
   val service = new AuthTokenService()
 

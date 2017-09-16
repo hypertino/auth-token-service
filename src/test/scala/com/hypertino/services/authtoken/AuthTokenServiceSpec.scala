@@ -2,24 +2,26 @@ package com.hypertino.services.authtoken
 
 import java.util.Base64
 
-import com.hypertino.authtoken.apiref.authtoken.{CreateSessionToken, TokensPost, Validation, ValidationsPost}
+import com.hypertino.authtoken.apiref.authtoken._
 import com.hypertino.authtoken.apiref.hyperstorage.{ContentDelete, ContentGet, ContentPut, HyperStorageTransaction}
-import com.hypertino.binders.value.{Obj, Text, Value}
+import com.hypertino.binders.value.{Obj, Value}
 import com.hypertino.hyperbus.Hyperbus
-import com.hypertino.hyperbus.model.{Created, DynamicBody, EmptyBody, ErrorBody, Headers, HeadersMap, MessagingContext, NoContent, NotFound, Ok, ResponseBase, Unauthorized}
+import com.hypertino.hyperbus.model.{Created, DynamicBody, ErrorBody, Headers, MessagingContext, NotFound, Ok, ResponseBase, Unauthorized}
+import com.hypertino.hyperbus.subscribe.Subscribable
 import com.hypertino.service.config.ConfigLoader
 import com.typesafe.config.Config
 import monix.eval.Task
 import monix.execution.Scheduler
 import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.time.{Millis, Seconds, Span}
 import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import scaldi.Module
 
 import scala.collection.mutable
 import scala.concurrent.duration._
-import com.hypertino.hyperbus.subscribe.Subscribable
 
 class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll with ScalaFutures with Matchers with Subscribable {
+  override implicit val patienceConfig = PatienceConfig(timeout = scaled(Span(3, Seconds)))
   implicit val scheduler = monix.execution.Scheduler.Implicits.global
   implicit val mcx = MessagingContext.empty
   bind [Config] to ConfigLoader()
@@ -61,16 +63,16 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
 
   "AuthTokenService" should "create token" in {
     val c = hyperbus
-      .ask(TokensPost(CreateSessionToken(), HeadersMap("Authorization-Result" → Obj.from("user_id" → "100500"))))
+      .ask(TokensPost(CreateSessionToken(), Headers(AuthHeader.AUTHORIZATION_RESULT → Obj.from("user_id" → "100500"))))
       .runAsync
       .futureValue
 
     c.body.userId shouldBe "100500"
   }
 
-  "AuthTokenService" should "authorize if token matches" in {
+  it should "authorize if token matches" in {
     val c = hyperbus
-      .ask(TokensPost(CreateSessionToken(), HeadersMap("Authorization-Result" → Obj.from("user_id" → "100500"))))
+      .ask(TokensPost(CreateSessionToken(), Headers(AuthHeader.AUTHORIZATION_RESULT → Obj.from("user_id" → "100500"))))
       .runAsync
       .futureValue
 
@@ -88,7 +90,7 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
     r.body.identityKeys shouldBe Obj.from("user_id" → "100500")
   }
 
-  "AuthTokenService" should "unathorize if user doesn't exists" in {
+  it should "unathorize if user doesn't exists" in {
     val r = hyperbus
       .ask(ValidationsPost(Validation("Token bWFtbW90aDoxMjM0NQ==")))
       .runAsync

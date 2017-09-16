@@ -1,23 +1,22 @@
 package com.hypertino.services.authtoken
 
-import java.security.SecureRandom
 import java.util.Base64
 
 import com.hypertino.authtoken.apiref.authtoken._
 import com.hypertino.authtoken.apiref.hyperstorage.{ContentDelete, ContentGet, ContentPut}
 import com.hypertino.binders.value.{Null, Obj}
 import com.hypertino.hyperbus.Hyperbus
-import com.hypertino.hyperbus.model.{BadRequest, Created, DynamicBody, EmptyBody, ErrorBody, NoContent, NotFound, Ok, ResponseBase, Unauthorized}
+import com.hypertino.hyperbus.model.{BadRequest, Created, DynamicBody, EmptyBody, ErrorBody, NoContent, NotFound, ResponseBase, Unauthorized}
+import com.hypertino.hyperbus.subscribe.Subscribable
 import com.hypertino.hyperbus.util.IdGenerator
 import com.hypertino.service.control.api.Service
+import com.typesafe.scalalogging.StrictLogging
 import monix.eval.Task
 import monix.execution.Scheduler
-import com.typesafe.scalalogging.StrictLogging
 import scaldi.{Injectable, Injector}
 
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
-import com.hypertino.hyperbus.subscribe.Subscribable
 
 class AuthTokenService(implicit val injector: Injector) extends Service with Injectable with Subscribable with StrictLogging {
   private implicit val scheduler = inject[Scheduler]
@@ -67,7 +66,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
   }
 
   def onTokensPost(implicit post: TokensPost): Task[ResponseBase] = {
-    post.headers.get("Authorization-Result").map { authorizationResult ⇒
+    post.headers.get(AuthHeader.AUTHORIZATION_RESULT).map { authorizationResult ⇒
       val userId = authorizationResult.user_id.toString
       val tokenId = IdGenerator.create()
       val tokenKey = keyGenerator.nextKey()
@@ -88,7 +87,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
   }
 
   def onTokenDelete(implicit delete: TokenDelete): Task[ResponseBase] = {
-    delete.headers.get("Authorization-Result").map { authorizationResult ⇒
+    delete.headers.get(AuthHeader.AUTHORIZATION_RESULT).map { authorizationResult ⇒
       val userId = authorizationResult.user_id
       hyperbus
         .ask(ContentGet(getTokenStoragePath(delete.tokenId)))

@@ -3,10 +3,10 @@ package com.hypertino.services.authtoken
 import java.util.Base64
 
 import com.hypertino.authtoken.apiref.authtoken._
-import com.hypertino.authtoken.apiref.hyperstorage.{ContentDelete, ContentGet, ContentPut}
+import com.hypertino.authtoken.apiref.hyperstorage.{ContentDelete, ContentGet, ContentPut, HyperStorageHeader}
 import com.hypertino.binders.value.{Null, Obj}
 import com.hypertino.hyperbus.Hyperbus
-import com.hypertino.hyperbus.model.{BadRequest, Created, DynamicBody, EmptyBody, ErrorBody, NoContent, NotFound, ResponseBase, Unauthorized}
+import com.hypertino.hyperbus.model.{BadRequest, Created, DynamicBody, EmptyBody, ErrorBody, Headers, NoContent, NotFound, ResponseBase, Unauthorized}
 import com.hypertino.hyperbus.subscribe.Subscribable
 import com.hypertino.hyperbus.util.IdGenerator
 import com.hypertino.service.control.api.Service
@@ -70,14 +70,16 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
       val userId = authorizationResult.user_id.toString
       val tokenId = IdGenerator.create()
       val tokenKey = keyGenerator.nextKey()
-      val validUntil = post.body.timeToLiveSeconds.getOrElse(DEFAULT_TOKEN_LIFETIME).toLong * 1000l +
-        System.currentTimeMillis()
+      val ttlInSeconds = post.body.timeToLiveSeconds.getOrElse(DEFAULT_TOKEN_LIFETIME)
+      val validUntil = ttlInSeconds.toLong * 1000l + System.currentTimeMillis()
 
       val token = SessionToken(userId,tokenId,tokenKey,validUntil)
       import com.hypertino.binders.value._
       import com.hypertino.hyperbus.serialization.SerializationOptions.default._
       hyperbus
-        .ask(ContentPut(getTokenStoragePath(tokenId), DynamicBody(token.toValue)))
+        .ask(ContentPut(getTokenStoragePath(tokenId), DynamicBody(token.toValue), headers=Headers(
+          HyperStorageHeader.HYPER_STORAGE_TTL → ttlInSeconds
+        )))
         .map { _ ⇒
           Created(token)
         }

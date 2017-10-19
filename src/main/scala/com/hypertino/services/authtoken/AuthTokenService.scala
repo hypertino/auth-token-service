@@ -47,12 +47,12 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
           .ask(ContentGet(getTokenStoragePath(tokenId)))
           .map { ok ⇒
             val token = ok.body.content
-            if (token.token_key.toString != tokenKey ||
-                token.valid_until.toLong < System.currentTimeMillis) {
+            if (token.dynamic.token_key.toString != tokenKey ||
+                token.dynamic.valid_until.toLong < System.currentTimeMillis) {
               throw Unauthorized(ErrorBody("token-not-found"))
             } else {
               Created(ValidationResult(
-                identityKeys = Obj.from("user_id" → token.user_id),
+                identityKeys = Obj.from("user_id" → token.dynamic.user_id),
                 extra = Null
               ))
             }
@@ -67,7 +67,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
 
   def onTokensPost(implicit post: TokensPost): Task[ResponseBase] = {
     post.headers.get(AuthHeader.AUTHORIZATION_RESULT).map { authorizationResult ⇒
-      val userId = authorizationResult.user_id.toString
+      val userId = authorizationResult.dynamic.user_id.toString
       val tokenId = IdGenerator.create()
       val tokenKey = keyGenerator.nextKey()
       val ttlInSeconds = post.body.timeToLiveSeconds.getOrElse(DEFAULT_TOKEN_LIFETIME)
@@ -90,12 +90,12 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
 
   def onTokenDelete(implicit delete: TokenDelete): Task[ResponseBase] = {
     delete.headers.get(AuthHeader.AUTHORIZATION_RESULT).map { authorizationResult ⇒
-      val userId = authorizationResult.user_id
+      val userId = authorizationResult.dynamic.user_id
       hyperbus
         .ask(ContentGet(getTokenStoragePath(delete.tokenId)))
         .flatMap { ok ⇒
           val token = ok.body.content
-          if (token.user_id != userId) {
+          if (token.dynamic.user_id != userId) {
             Task.raiseError[ResponseBase](Unauthorized(ErrorBody("token-not-found")))
           }
           else {

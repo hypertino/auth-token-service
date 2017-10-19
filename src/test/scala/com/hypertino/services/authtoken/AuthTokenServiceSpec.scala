@@ -8,6 +8,8 @@ import com.hypertino.binders.value.{Obj, Value}
 import com.hypertino.hyperbus.Hyperbus
 import com.hypertino.hyperbus.model.{Created, DynamicBody, ErrorBody, Headers, MessagingContext, NotFound, Ok, ResponseBase, Unauthorized}
 import com.hypertino.hyperbus.subscribe.Subscribable
+import com.hypertino.hyperbus.transport.api.ServiceRegistrator
+import com.hypertino.hyperbus.transport.registrators.DummyRegistrator
 import com.hypertino.service.config.ConfigLoader
 import com.typesafe.config.Config
 import monix.eval.Task
@@ -25,8 +27,9 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
   implicit val scheduler = monix.execution.Scheduler.Implicits.global
   implicit val mcx = MessagingContext.empty
   bind [Config] to ConfigLoader()
-  bind [Scheduler] identifiedBy 'scheduler to scheduler
-  bind [Hyperbus] identifiedBy 'hyperbus to injected[Hyperbus]
+  bind [Scheduler] to scheduler
+  bind [Hyperbus] to injected[Hyperbus]
+  bind [ServiceRegistrator] to DummyRegistrator
 
   val hyperbus = inject[Hyperbus]
   val handlers = hyperbus.subscribe(this)

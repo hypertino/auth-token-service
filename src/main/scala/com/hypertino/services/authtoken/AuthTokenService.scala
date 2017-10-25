@@ -23,7 +23,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
   private val hyperbus = inject[Hyperbus]
   private final val DEFAULT_TOKEN_LIFETIME = 365 * 24 * 60 * 60
   private final val keyGenerator = new KeyGenerator(6)
-  logger.info(s"${getClass.getName} started")
+  logger.info(s"${getClass.getName} is STARTED")
 
   private val handlers = hyperbus.subscribe(this, logger)
 
@@ -115,6 +115,6 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
 
   override def stopService(controlBreak: Boolean, timeout: FiniteDuration): Future[Unit] = Future {
     handlers.foreach(_.cancel())
-    logger.info(s"${getClass.getName} stopped")
+    logger.info(s"${getClass.getName} is STOPPED")
   }
 }

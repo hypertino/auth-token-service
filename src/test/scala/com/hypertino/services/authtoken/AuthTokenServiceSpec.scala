@@ -102,6 +102,6 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
 
     r shouldBe a[Unauthorized[_]]
     val b = r.asInstanceOf[Unauthorized[ErrorBody]].body
-    b.code shouldBe "token-not-found"
+    b.code shouldBe "token_not_found"
   }
 }

@@ -10,6 +10,7 @@ import com.hypertino.hyperbus.model.{BadRequest, Created, DynamicBody, EmptyBody
 import com.hypertino.hyperbus.subscribe.Subscribable
 import com.hypertino.hyperbus.util.IdGenerator
 import com.hypertino.service.control.api.Service
+import com.hypertino.services.authtoken.utils.ErrorCode
 import com.typesafe.scalalogging.StrictLogging
 import monix.eval.Task
 import monix.execution.Scheduler
@@ -31,14 +32,14 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
     val authorization = post.body.authorization
     val spaceIndex = authorization.indexOf(" ")
     if (spaceIndex < 0 || authorization.substring(0, spaceIndex).compareToIgnoreCase("token") != 0) {
-      Task.eval(BadRequest(ErrorBody("format-error")))
+      Task.eval(BadRequest(ErrorBody(ErrorCode.FORMAT_ERROR)))
     }
     else {
       val base64 = authorization.substring(spaceIndex + 1)
       val tokenIdAndKey = new String(Base64.getDecoder.decode(base64), "UTF-8")
       val semicolonIndex = tokenIdAndKey.indexOf(":")
       if (semicolonIndex < 0) {
-        Task.eval(BadRequest(ErrorBody("format-error-token-id")))
+        Task.eval(BadRequest(ErrorBody(ErrorCode.FORMAT_ERROR_TOKEN_ID)))
       }
       else {
         val tokenId = tokenIdAndKey.substring(0, semicolonIndex)
@@ -49,7 +50,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
             val token = ok.body.content
             if (token.dynamic.token_key.toString != tokenKey ||
                 token.dynamic.valid_until.toLong < System.currentTimeMillis) {
-              throw Unauthorized(ErrorBody("token-not-found"))
+              throw Unauthorized(ErrorBody(ErrorCode.TOKEN_NOT_FOUND))
             } else {
               Created(ValidationResult(
                 identityKeys = Obj.from("user_id" → token.dynamic.user_id),
@@ -59,7 +60,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
           }
           .onErrorRecover {
             case _: NotFound[_] ⇒
-              Unauthorized(ErrorBody("token-not-found"))
+              Unauthorized(ErrorBody(ErrorCode.TOKEN_NOT_FOUND))
           }
       }
     }
@@ -84,7 +85,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
           Created(token)
         }
     } getOrElse {
-      Task.eval(Unauthorized(ErrorBody("unauthorized")))
+      Task.eval(Unauthorized())
     }
   }
 
@@ -96,7 +97,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
         .flatMap { ok ⇒
           val token = ok.body.content
           if (token.dynamic.user_id != userId) {
-            Task.raiseError[ResponseBase](Unauthorized(ErrorBody("token-not-found")))
+            Task.raiseError[ResponseBase](Unauthorized(ErrorBody(ErrorCode.TOKEN_NOT_FOUND)))
           }
           else {
             hyperbus
@@ -107,7 +108,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
           }
         }
     } getOrElse {
-      Task.eval(Unauthorized(ErrorBody("unauthorized")))
+      Task.eval(Unauthorized())
     }
   }
 

@@ -49,7 +49,7 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
   def onContentGet(implicit request: ContentGet): Task[ResponseBase] = {
     hyperStorageContent.get(request.path) match {
       case Some(v) ⇒ Task.eval(Ok(DynamicBody(v)))
-      case None ⇒ Task.eval(NotFound(ErrorBody("not-found", Some(request.path))))
+      case None ⇒ Task.eval(NotFound(ErrorBody("not_found", Some(request.path))))
     }
   }
 

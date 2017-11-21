@@ -91,6 +91,7 @@ class AuthTokenServiceSpec extends FlatSpec with Module with BeforeAndAfterAll w
 
     r shouldBe a[Created[_]]
     r.body.identityKeys shouldBe Obj.from("user_id" → "100500")
+    r.body.extra shouldBe Obj.from("token_id" -> c.body.tokenId)
   }
 
   it should "unathorize if user doesn't exists" in {

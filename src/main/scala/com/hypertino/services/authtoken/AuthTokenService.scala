@@ -54,7 +54,7 @@ class AuthTokenService(implicit val injector: Injector) extends Service with Inj
             } else {
               Created(ValidationResult(
                 identityKeys = Obj.from("user_id" → token.dynamic.user_id),
-                extra = Null
+                extra = Obj.from("token_id" -> tokenId)
               ))
             }
           }

@@ -4,7 +4,7 @@ scalaVersion := crossScalaVersions.value.head
 
 lazy val `auth-service` = project in file(".") enablePlugins Raml2Hyperbus settings (
     name := "auth-token-service",
-    version := "0.3-SNAPSHOT",
+    version := "0.3.1-SNAPSHOT",
     organization := "com.hypertino",  
     resolvers ++= Seq(
       Resolver.sonatypeRepo("public")
